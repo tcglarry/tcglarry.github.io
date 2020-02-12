@@ -3,4 +3,4 @@
 
 ![Keras logo](https://s3.amazonaws.com/keras.io/img/keras-logo-2018-large-1200.png)
 
-![Me](https://drive.google.com/drive/u/0/my-drive/IMG_5958.JPG)
+![Me](https://drive.google.com/open?id=1wFxMy15aAJkk4sHMQl-JJFvWtrXj64A8)
