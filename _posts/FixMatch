@@ -1,0 +1,183 @@
+# FixMatch: Simplifying Semi-Supervised Learning with Consistency and Confidence
+https://arxiv.org/pdf/2001.07685.pdf
+
+This Paper: demonstrate the power of a simple combination of two common SSL methods: 
+
+- consistency regularization 
+- pseudo-labeling
+
+
+
+![](https://paper-attachments.dropbox.com/s_2E4B4294FBE6E1A894E10BC7895FD91E34233F19DA6D3046777B39D1D06D3436_1580541272662_+2020-02-01+1.27.55.png)
+
+
+Concept:
+Step 1: FixMatch, first generates pseudo-labels using the model’s predictions on weakly-augmented unlabeled images. 
+
+- For a given image, the pseudo-label is only retained if the model produces a high-confidence prediction. 
+
+Step 2: Model trained to predict the pseudo-label when fed a strongly augmented version of the same image
+
+- CutOut
+    - The main motivation for cutout comes from the problem of object occlusion, which is commonly encountered in many computer vision tasks, such as object recognition,
+    - tracking, or human pose estimation. 
+    - By generating new images which simulate occluded examples, we not only better
+
+
+![](https://paper-attachments.dropbox.com/s_2E4B4294FBE6E1A894E10BC7895FD91E34233F19DA6D3046777B39D1D06D3436_1580538399386_+2020-02-01+2.19.57.png)
+
+
+
+
+- CTAugment: (ReMixMatch)
+![](https://paper-attachments.dropbox.com/s_2E4B4294FBE6E1A894E10BC7895FD91E34233F19DA6D3046777B39D1D06D3436_1580537288608_+2020-02-01+2.07.50.png)
+
+- RandAugment https://arxiv.org/pdf/1909.13719.pdf
+
+
+![](https://paper-attachments.dropbox.com/s_2E4B4294FBE6E1A894E10BC7895FD91E34233F19DA6D3046777B39D1D06D3436_1580537721833_+2020-02-01+2.13.08.png)
+![](https://paper-attachments.dropbox.com/s_2E4B4294FBE6E1A894E10BC7895FD91E34233F19DA6D3046777B39D1D06D3436_1580537730564_+2020-02-01+2.12.45.png)
+
+
+
+
+
+- 
+
+SOTA on standard semi-supervised learning benchmarks, 
+
+-  94.93% accuracy on CIFAR-10 with 250 labels 
+- 88.61% accuracy with 40 – just 4 labels per class
+
+
+HOw it work
+L-class
+$$\chi = \{(x_b,p_b),b= 1,..B\}$$ a batch of $$B$$ Labelled examples 
+$$x_b$$: training sample, $$p_b$$: one hot label
+$$U=\{u_b,b= 1,..\mu*B\}$$a batch of $$\mu*B$$ Um-Labeled examples 
+$$\mu$$: hyperparameter determines the relative size $$\chi$$ and $$U$$
+
+
+Let $$pm(y | x)$$ be the predicted class distribution produced by the model for input $$x$$
+$$A(\cdot)$$ : Strong augmentation 
+$$\alpha(\cdot)$$ : weak augmentation 
+
+
+
+## Consistency regularization: 
+- an important component of many recent state-of-the-art SSL algorithms
+- on the assumption that the model should output similar predictions when fed perturbed versions of the same image
+- where the model is trained both via a standard supervised classification loss and on unlabeled data via the loss function
+![](https://paper-attachments.dropbox.com/s_2E4B4294FBE6E1A894E10BC7895FD91E34233F19DA6D3046777B39D1D06D3436_1580539669202_+2020-02-01+2.47.38.png)
+
+
+Note: $$p_m$$, $$\alpha$$ both are stochastic function, so the above two term may be different value
+
+
+## Pseudo-labeling
+- leverages the idea that we should use the model itself to obtain artificial labels for unlabeled data.
+- specifically refers to the use of “hard” labels (i.e., the arg max of the model’s output) and only retaining artificial labels whose largest class probability fall above a predefined threshold 
+![](https://paper-attachments.dropbox.com/s_2E4B4294FBE6E1A894E10BC7895FD91E34233F19DA6D3046777B39D1D06D3436_1580539877089_+2020-02-01+2.51.05.png)
+
+
+$$\hat{q_b}=\arg\max(q_b)$$
+$$\tau$$ = hyperparameter 
+
+
+## FIxMatch Loss
+
+$$L_s$$ : supervised loss ,
+$$L_u$$ = unsupervised Loss
+$$L= L_s+\lambda_u L_u$$
+
+
+![](https://paper-attachments.dropbox.com/s_2E4B4294FBE6E1A894E10BC7895FD91E34233F19DA6D3046777B39D1D06D3436_1580540507770_+2020-02-01+3.01.18.png)
+
+- standard cross entropy
+- $$q_b=p_m(y|\alpha(x_b))$$ : prediction of class based on weakly augmented sample $$x_b$$
+
+
+
+![](https://paper-attachments.dropbox.com/s_2E4B4294FBE6E1A894E10BC7895FD91E34233F19DA6D3046777B39D1D06D3436_1580540500997_+2020-02-01+3.01.26.png)
+
+- $$q_b=p_m(y|\alpha(u_b))$$,  $$\hat{q_b}=\arg\max(q_b)$$
+- $$\tau$$ : threshold hyperparameter
+- In training early stage,  $$\max(q_b)$$ is typically less than τ
+- As training progresses, the model’s predictions become more confident and it is more frequently the case that max(qb) > τ
+![](https://paper-attachments.dropbox.com/s_2E4B4294FBE6E1A894E10BC7895FD91E34233F19DA6D3046777B39D1D06D3436_1580541285790_+2020-02-01+1.27.55.png)
+
+
+
+
+## Augmentation 
+
+ Weak augmentation is a standard flip-and-shift augmentation strategy.
+
+- we randomly flip images horizontally with a probability of 50% on all datasets except SVHN 
+- we randomly translate images by up to 12.5% vertically and horizontally
+
+Strong augmentation,  CTAugment or RandAugment and follows by CutOut 
+
+- RandAugment: 
+    - We found that sampling a random magnitude from a pre-defined range at each training step (instead of using a fixed global value) works better for semi-supervised training, similar to what is used in UDA [45].
+- CTAugment: Instead of setting the transformation magnitudes randomly, CTAugment [2] learns them online over the course of training.
+    - a wide range of transformation magnitude values is divided into bins (as in AutoAugment [9])
+    - a weight (initially set to 1) is assigned to each bin.
+    - All examples are augmented with a pipeline consisting of two transformations which are sampled uniformly at random. 
+    - For a given transformation, a magnitude bin is sampled randomly with a probability according to the (normalized) bin weights
+    - To update the weights of the magnitude bins, a labeled example is augmented with two transformations whose magnitude bins are sampled uniformly at random. 
+    - The magnitude bin weights are then updated according to how close the model’s prediction is to the true label.
+
+
+Regularization
+
+- we find that regularization is particularly important. 
+- In all of our models and experiments, we use **simple weight decay regularization.** 
+- We also found that using the Adam optimizer [19] resulted in worse performance and instead use standard SGD with momentum [42, 33, 29]. 
+- We did not find a substantial difference between standard and Nesterov momentum
+
+Learning Rate
+
+- For a learning rate schedule, we use a cosine learning rate decay [23] which sets the learning rate to
+- $$\eta\cos(\frac{7\pi k}{16K})$$,  $$\eta$$ : initial training rate,  $$k,K$$ : current step vs Total training stpes 
+
+EMA
+
+- Finally, we report final performance using an exponential moving average of model parameters.
+
+
+
+## Experiment
+- In many cases, we perform experiments with fewer labels than previously considered since FixMatch shows promise in extremely label-scarce settings. 
+- Note that we use an identical set of hyperparameters ($$\lambda_u = 1, \eta = 0.03, \beta = 0.9, \tau = 0.95, \mu = 7, B = 64, K = 220$$) across all amounts of labeled examples and all datasets with the exception of ImageNet
+- Results are state-of-the-art on all datasets except for CIFAR-100 where ReMixMatch is a bit superior. 
+- To understand why ReMixMatch performs better than FixMatch, we experimented with a few variants of FixMatch which copy various components of ReMixMatch into FixMatch
+- We find that the most important term is Distribution Alignment (DA), which encourages the model to emit all classes with equal probability. 
+- Combining FixMatch with DA reaches a 40.14% error rate with 400 labeled examples, which is substantially better than the 44.28% achieved by ReMixMatch.
+
+
+
+![](https://paper-attachments.dropbox.com/s_2E4B4294FBE6E1A894E10BC7895FD91E34233F19DA6D3046777B39D1D06D3436_1580611854872_+2020-02-01+3.35.36.png)
+
+
+
+![](https://paper-attachments.dropbox.com/s_2E4B4294FBE6E1A894E10BC7895FD91E34233F19DA6D3046777B39D1D06D3436_1580611861244_+2020-02-01+3.35.44.png)
+
+
+
+
+## Experiment on ImageNet
+- use 10% of the training data as labeled examples and treat the rest as unlabeled samples.
+- use a ResNet-50 network architecture and RandAugment [10] as strong augmentation for this experiment.
+- achieves a top-1 error rate of 28.54±0.52%, which is 2.68% better than UDA [45]. Our top-5 error rate is 10.87±0.28%
+- 
+
+
+![](https://paper-attachments.dropbox.com/s_2E4B4294FBE6E1A894E10BC7895FD91E34233F19DA6D3046777B39D1D06D3436_1580613536195_+2020-02-02+11.11.08.png)
+![](https://paper-attachments.dropbox.com/s_2E4B4294FBE6E1A894E10BC7895FD91E34233F19DA6D3046777B39D1D06D3436_1580613542056_+2020-02-02+11.11.20.png)
+![](https://paper-attachments.dropbox.com/s_2E4B4294FBE6E1A894E10BC7895FD91E34233F19DA6D3046777B39D1D06D3436_1580613548237_+2020-02-02+11.11.51.png)
+
+
+
+
+![](https://paper-attachments.dropbox.com/s_2E4B4294FBE6E1A894E10BC7895FD91E34233F19DA6D3046777B39D1D06D3436_1580613569592_+2020-02-02+11.14.06.png)
